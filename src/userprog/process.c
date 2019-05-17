@@ -28,8 +28,15 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
+  char temp[100];
   char *fn_copy;
+  int i;  
   tid_t tid;
+
+  strlcpy(temp, file_name, strlen(file_name) + 1);
+  
+  for(i=0; temp[i] != '\0' && temp[i] != ' '; i++);
+    temp[i] = 0;
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -39,7 +46,7 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, PGSIZE);
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (temp, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -61,8 +68,8 @@ start_process (void *file_name_)
   char **address;
   char **temp2;
 
-  argv = (char**)malloc(20*sizeof(char *));
-  address = (char **)malloc(20*sizeof(char *));
+  argv = (char**)malloc(50*sizeof(char *));
+  address = (char **)malloc(50*sizeof(char *));
   temp = strtok_r(file_name, " ", &next_str);
 
   for(i = 0; temp; i++)
@@ -71,9 +78,9 @@ start_process (void *file_name_)
     temp = strtok_r(NULL, " ", &next_str);
   }
   argc = i;  
-
+  
 //  printf("\n\n\n\n\n");
-//  printf("%d\n", argc);
+//  printf("%s\n", argv[0]);
 //  printf("\n\n\n\n\n");
 
   memset (&if_, 0, sizeof if_);
@@ -86,7 +93,6 @@ start_process (void *file_name_)
   int word_align;
   for(i=0; i<argc; i++)
     total_size += (strlen(argv[i]) + 1);
-
   if(total_size % 4 == 0)
     word_align = 0;
   else
@@ -136,7 +142,8 @@ start_process (void *file_name_)
     if_.esp -= 4;
     memset(if_.esp, 0, 4); 
   }
-  hex_dump(if_.esp, if_.esp, 100, 1);
+//  hex_dump(if_.esp, if_.esp, 100, 1);
+
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
@@ -165,8 +172,9 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
 //  return -1;
-  while(true)
-   thread_yield();
+  int i;
+  for(i=0; i<100; i++)
+    thread_yield();
 }
 
 /* Free the current process's resources. */
