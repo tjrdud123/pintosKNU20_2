@@ -86,8 +86,7 @@ typedef int tid_t;
 struct thread
   {
     /* Owned by thread.c. */
-    int64_t wakeup_time_tick;
-    
+    int64_t wakeup_time_tick;    
 
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
@@ -100,6 +99,9 @@ struct thread
     struct list_elem elem;              /* List element. */
 
 #ifdef USERPROG
+    struct file *fd[128];
+
+
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     struct semaphore child_lock;

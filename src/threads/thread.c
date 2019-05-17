@@ -11,6 +11,8 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "filesys/filesys.h"
+
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -460,7 +462,7 @@ static void
 init_thread (struct thread *t, const char *name, int priority)
 {
   struct thread *pt = NULL;  
-
+  int i;
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
   ASSERT (name != NULL);
@@ -474,6 +476,11 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
 
   #ifdef USERPROG
+    for(i=0; i<128; i++)
+    {
+      t->fd[i] = NULL;
+    }
+
     sema_init(&(t->child_lock), 0);
     sema_init(&(t->mem_lock), 0);
     list_init(&(t->child_list));
