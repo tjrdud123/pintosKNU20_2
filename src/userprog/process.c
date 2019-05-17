@@ -17,6 +17,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "threads/synch.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -44,6 +45,9 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+
+  if(filesys_open(temp) == NULL)
+    return -1;
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (temp, PRI_DEFAULT, start_process, fn_copy);
@@ -169,12 +173,25 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-//  return -1;
-  int i;
-  for(i=0; i<100; i++)
-    thread_yield();
+  struct list_elem * e;
+  struct thread * t = NULL;
+  int exit_stat;
+  
+  for(e = list_begin(&(thread_current()->child_list)); e != list_end(&(thread_current()->child_list)); e = list_next(e))
+  {
+    t = list_entry(e, struct thread, child_elem);
+    if(child_tid == t->tid)
+    {
+      sema_down(&(t->child_lock));
+      exit_stat = t->exit_status;
+      list_remove(&(t->child_elem));
+      sema_up(&(t->mem_lock));
+      return exit_stat;
+    }
+  }
+  return -1;
 }
 
 /* Free the current process's resources. */
@@ -200,6 +217,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  sema_up(&(cur->child_lock));
+  sema_down(&(cur->mem_lock));
 }
 
 /* Sets up the CPU for running user code in the current
