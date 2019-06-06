@@ -11,8 +11,6 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
-#include "filesys/filesys.h"
-
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -461,7 +459,6 @@ is_thread (struct thread *t)
 static void
 init_thread (struct thread *t, const char *name, int priority)
 {
-  struct thread *pt = NULL;  
   int i;
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
@@ -475,17 +472,19 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 
-  #ifdef USERPROG
-    for(i=0; i<128; i++)
-    {
-      t->fd[i] = NULL;
-    }
-
-    sema_init(&(t->child_lock), 0);
-    sema_init(&(t->mem_lock), 0);
-    list_init(&(t->child_list));
-    list_push_back(&(running_thread()->child_list), &(t->child_elem));
-  #endif
+  t->isWait=false;
+  sema_init(&(t->lock1), 0); 
+  sema_init(&(t->lock2), 0); 
+  sema_init(&(t->child_lock),0);
+  list_init(&(t->child));
+  list_push_back(&(running_thread()->child), &(t->child_elem));
+  t->exit_status=-1;
+  t->parent=running_thread();
+  for (i = 0; i < 128; i++) {                                                         
+    t->fd[i] = NULL;                                                                
+  }
+  t->success=false;
+  
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

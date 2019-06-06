@@ -5,7 +5,6 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
-//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -81,13 +80,9 @@ typedef int tid_t;
    only because they are mutually exclusive: only a thread in the
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 struct thread
   {
     /* Owned by thread.c. */
-    int64_t wakeup_time_tick;    
-
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
     char name[16];                      /* Name (for debugging purposes). */
@@ -98,24 +93,25 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
-    struct file *fd[128];
-
-
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    struct semaphore lock1;
+    struct semaphore lock2;
     struct semaphore child_lock;
-    struct semaphore mem_lock;
-    struct list child_list;
+    struct list child;
     struct list_elem child_elem;
+    struct thread* parent;
+    
     int exit_status;
-#endif
+    bool isWait;
+    bool success;
+                    
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
-  };
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    struct file* fd[128];
+  };
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

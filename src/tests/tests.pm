@@ -33,9 +33,10 @@ sub check_expected {
     compare_output ("run", @options, \@output, $expected);
 }
 
+
 sub common_checks {
     my ($run, @output) = @_;
-
+   
     fail "\u$run produced no output at all\n" if @output == 0;
 
     check_for_panic ($run, @output);
@@ -133,7 +134,7 @@ EOF
 sub get_core_output {
     my ($run, @output) = @_;
     my ($p);
-
+    
     my ($process);
     my ($start);
     for my $i (0...$#_) {
@@ -148,7 +149,7 @@ sub get_core_output {
 
     fail "\u$run didn't start a thread or process\n" if !defined $start;
     fail "\u$run started '$process' but it never finished\n" if !defined $end;
-
+    
     return @output[$start...$end];
 }
 
@@ -157,7 +158,6 @@ sub compare_output {
     my ($expected) = pop @_;
     my ($output) = pop @_;
     my (%options) = @_;
-
     my (@output) = get_core_output ($run, @$output);
     fail "\u$run didn't produce any output" if !@output;
 

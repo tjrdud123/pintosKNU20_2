@@ -39,6 +39,7 @@ spawn_child (int c, enum child_termination_mode mode)
   char child_cmd[128];
   snprintf (child_cmd, sizeof child_cmd,
             "%s %d %s", test_name, c, mode == CRASH ? "-k" : "");
+  //msg("child_cmd:%s",child_cmd);
   return exec (child_cmd);
 }
 
@@ -132,10 +133,15 @@ main (int argc, char *argv[])
       if (n > EXPECTED_DEPTH_TO_PASS/2)
         {
           child_pid = spawn_child (n + 1, CRASH);
+
+
+         // msg("after spawn_child crash, child_id:%d",child_pid);
           if (child_pid != -1)
             {
               if (wait (child_pid) != -1)
                 fail ("crashed child should return -1.");
+
+       //        msg("after wait crash, child_id:%d",child_pid);
             }
           /* If spawning this child failed, so should
              the next spawn_child below. */
@@ -147,11 +153,19 @@ main (int argc, char *argv[])
       /* If maximum depth is reached, return result. */
       if (child_pid == -1)
         return n;
-
+        
+      //msg("after spawn_child, child_id:%d",child_pid);
       /* Else wait for child to report how deeply it was able to recurse. */
       int reached_depth = wait (child_pid);
+      //msg("reached_depth:%d, i:%d, child_pid:%d",reached_depth,i,child_pid);
+
       if (reached_depth == -1)
+      {
+        //msg("reached_depth:%d, i:%d",reached_depth,i);
         fail ("wait returned -1.");
+      }
+        
+      //msg("after wait, child_id:%d",child_pid);
 
       /* Record the depth reached during the first run; on subsequent
          runs, fail if those runs do not match the depth achieved on the
